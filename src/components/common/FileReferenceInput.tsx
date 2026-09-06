@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import type { ChangeEvent } from "react";
-import { validateFileReference } from "../../utils/fileValidation";
-import type { MediaType } from "../../utils/fileValidation";
+import { validateFileReference } from "../../utils/assetTypeDetection";
+import type { MediaType } from "../../utils/assetTypeDetection";
 import { Button } from "../ui/Button";
 
 export interface FileReferenceInputProps {

@@ -2,15 +2,6 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the focus management hook
-vi.mock("../../hooks/useFocusManagement", () => ({
-  useModalFocusManagement: () => ({
-    containerRef: { current: null },
-    initializeFocusManagement: vi.fn(() => vi.fn()),
-    cleanupFocusManagement: vi.fn(),
-  }),
-}));
-
 describe("ConfirmDialog", () => {
   const defaultProps = {
     isOpen: true,

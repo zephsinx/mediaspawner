@@ -5,6 +5,7 @@ import { CacheService, CACHE_KEYS } from "./cacheService";
 import { SpawnService } from "./spawnService";
 import { SpawnProfileService } from "./spawnProfileService";
 import { resolveEffectiveProperties } from "../utils/assetSettingsResolver";
+import { isValidUrl, validateFileReference } from "../utils/assetTypeDetection";
 import {
   dispatchMediaSpawnerEvent,
   MediaSpawnerEvents,
@@ -510,7 +511,7 @@ export class AssetService {
    * Check if path is a URL
    */
   private static isUrlPath(path: string): boolean {
-    return path.startsWith("http://") || path.startsWith("https://");
+    return isValidUrl(path);
   }
 
   /**
@@ -529,71 +530,7 @@ export class AssetService {
    * Validate file path format
    */
   private static isValidFilePath(path: string): boolean {
-    if (!path || path.trim().length === 0) {
-      return false;
-    }
-
-    // Check for invalid characters that are not allowed in file paths
-    // Allow colons only in drive letters (C:) and backslashes for Windows paths
-    const invalidChars = /[<>"|?*]/;
-    if (invalidChars.test(path)) {
-      return false;
-    }
-
-    // Additional validation for Windows paths
-    // Check for invalid colon usage (not in drive letter)
-    const colonIndex = path.indexOf(":");
-    if (colonIndex !== -1 && colonIndex !== 1) {
-      // Colon is only allowed as second character for drive letters (C:)
-      return false;
-    }
-
-    // Check for supported file extensions
-    const supportedExtensions = [
-      // Images
-      "jpg",
-      "jpeg",
-      "png",
-      "gif",
-      "webp",
-      "bmp",
-      "svg",
-      "ico",
-      "tiff",
-      "tif",
-      // Videos
-      "mp4",
-      "webm",
-      "mov",
-      "avi",
-      "mkv",
-      "flv",
-      "wmv",
-      "m4v",
-      "3gp",
-      "ogv",
-      // Audio
-      "mp3",
-      "wav",
-      "ogg",
-      "m4a",
-      "aac",
-      "flac",
-      "wma",
-      "opus",
-      "m4r",
-    ];
-
-    // Extract extension from path, handling both forward and backward slashes
-    const lastDot = path.lastIndexOf(".");
-    const lastSlash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
-
-    if (lastDot > lastSlash && lastDot !== -1) {
-      const extension = path.slice(lastDot + 1).toLowerCase();
-      return supportedExtensions.includes(extension);
-    }
-
-    return false;
+    return validateFileReference(path).isValid;
   }
 
   /**

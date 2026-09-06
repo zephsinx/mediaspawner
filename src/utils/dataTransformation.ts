@@ -408,48 +408,6 @@ export function transformAssetSettingsFromSchema(
 }
 
 /**
- * Normalize working directory path for consistent handling
- */
-export function normalizeWorkingDirectory(path: string): string {
-  if (!path) return "";
-
-  // Normalize path separators and remove trailing slashes
-  const normalized = path.replace(/[\\/]+/g, "/").replace(/\/$/, "");
-
-  // Ensure absolute paths start with proper separator
-  if (
-    normalized &&
-    !normalized.startsWith("/") &&
-    !normalized.match(/^[A-Za-z]:/)
-  ) {
-    return "/" + normalized;
-  }
-
-  return normalized;
-}
-
-/**
- * Convert Unix timestamp to ISO string
- */
-export function timestampToIsoString(timestamp: number): string {
-  return new Date(timestamp).toISOString();
-}
-
-/**
- * Convert ISO string to Unix timestamp
- */
-export function isoStringToTimestamp(isoString: string): number {
-  return new Date(isoString).getTime();
-}
-
-/**
- * Validate that a timestamp is valid
- */
-export function isValidTimestamp(timestamp: number): boolean {
-  return !isNaN(timestamp) && isFinite(timestamp) && timestamp > 0;
-}
-
-/**
  * Validate that an ISO string is valid
  */
 export function isValidIsoString(isoString: string): boolean {

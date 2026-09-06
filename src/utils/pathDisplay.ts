@@ -59,31 +59,3 @@ export function computeDisplayPath(assetPath: string): string {
   // Use backslash in display to match Windows convention for shortened paths
   return `${workingDirectory}\\...\\${fileName}`;
 }
-
-/**
- * Batch version of computeDisplayPath for processing multiple paths efficiently
- *
- * @param assetPaths - Array of asset paths to process
- * @returns Array of computed display paths in the same order
- */
-export function computeDisplayPaths(assetPaths: string[]): string[] {
-  // Get settings once for efficiency
-  const settings = SettingsService.getSettings();
-  const workingDirectory = settings.workingDirectory;
-
-  return assetPaths.map((assetPath) => {
-    // Return URLs unchanged
-    if (isUrl(assetPath)) {
-      return assetPath;
-    }
-
-    // If no working directory is set, return path unchanged
-    if (!workingDirectory.trim()) {
-      return assetPath;
-    }
-
-    // For local files, assume they're in the working directory and create shortened display
-    const fileName = getFileName(assetPath);
-    return `${workingDirectory}\\...\\${fileName}`;
-  });
-}

@@ -31,48 +31,15 @@ const ASSET_TYPE_EXTENSIONS = {
   audio: ["mp3", "wav", "ogg", "m4a", "aac", "flac", "wma", "opus", "m4r"],
 } as const;
 
-/**
- * MIME type mappings for different asset types
- */
-const ASSET_TYPE_MIMES = {
-  image: [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/gif",
-    "image/bmp",
-    "image/webp",
-    "image/svg+xml",
-    "image/x-icon",
-    "image/tiff",
-  ],
-  video: [
-    "video/mp4",
-    "video/webm",
-    "video/quicktime",
-    "video/x-msvideo",
-    "video/x-matroska",
-    "video/x-flv",
-    "video/x-ms-wmv",
-    "video/3gpp",
-    "video/ogg",
-  ],
-  audio: [
-    "audio/mpeg",
-    "audio/mp3",
-    "audio/wav",
-    "audio/wave",
-    "audio/x-wav",
-    "audio/ogg",
-    "audio/mp4",
-    "audio/aac",
-    "audio/x-flac",
-    "audio/x-ms-wma",
-    "audio/opus",
-  ],
-} as const;
+export type MediaType = keyof typeof ASSET_TYPE_EXTENSIONS;
 
-function extractExtension(path: string): string {
+export interface FileValidationResult {
+  isValid: boolean;
+  mediaType?: MediaType;
+  error?: string;
+}
+
+export function extractExtension(path: string): string {
   try {
     const url = new URL(path);
     if (url.protocol === "http:" || url.protocol === "https:") {
@@ -126,53 +93,6 @@ export function detectAssetTypeFromPath(path: string): MediaAsset["type"] {
 }
 
 /**
- * Detect asset type from MIME type
- */
-export function detectAssetTypeFromMime(mimeType: string): MediaAsset["type"] {
-  const normalizedMime = mimeType.toLowerCase().split(";")[0].trim();
-
-  if ((ASSET_TYPE_MIMES.image as readonly string[]).includes(normalizedMime)) {
-    return "image";
-  }
-  if ((ASSET_TYPE_MIMES.video as readonly string[]).includes(normalizedMime)) {
-    return "video";
-  }
-  if ((ASSET_TYPE_MIMES.audio as readonly string[]).includes(normalizedMime)) {
-    return "audio";
-  }
-
-  // Default fallback to image
-  return "image";
-}
-
-/**
- * Unified asset type detection from path or MIME type
- * Tries path detection first, falls back to MIME if provided
- */
-export function detectAssetType(
-  pathOrMime: string,
-  fallback: MediaAsset["type"] = "image",
-): MediaAsset["type"] {
-  // Try path detection first
-  if (
-    pathOrMime.includes(".") ||
-    pathOrMime.includes("/") ||
-    pathOrMime.includes("\\")
-  ) {
-    const typeFromPath = detectAssetTypeFromPath(pathOrMime);
-    if (typeFromPath) return typeFromPath;
-  }
-
-  // Try MIME type detection
-  if (pathOrMime.includes("/")) {
-    const typeFromMime = detectAssetTypeFromMime(pathOrMime);
-    if (typeFromMime) return typeFromMime;
-  }
-
-  return fallback;
-}
-
-/**
  * Get all supported file extensions for a specific asset type or all types
  */
 export function getSupportedExtensions(type?: MediaAsset["type"]): string[] {
@@ -192,20 +112,103 @@ export function isValidAssetPath(path: string): boolean {
 }
 
 /**
- * Get all supported MIME types for a specific asset type or all types
+ * Determine the media type based on file extension
  */
-export function getSupportedMimeTypes(type?: MediaAsset["type"]): string[] {
-  if (type) {
-    return [...ASSET_TYPE_MIMES[type]];
+export function getMediaTypeFromExtension(extension: string): MediaType | null {
+  const lowerExt = extension.toLowerCase();
+  for (const [mediaType, extensions] of Object.entries(ASSET_TYPE_EXTENSIONS)) {
+    if ((extensions as readonly string[]).includes(lowerExt)) {
+      return mediaType as MediaType;
+    }
   }
-
-  return Object.values(ASSET_TYPE_MIMES).flat();
+  return null;
 }
 
 /**
- * Check if a MIME type is supported
+ * Validate if a file path or URL has a supported file type
  */
-export function isValidMimeType(mimeType: string): boolean {
-  const normalizedMime = mimeType.toLowerCase().split(";")[0].trim();
-  return getSupportedMimeTypes().includes(normalizedMime);
+export function validateFileType(filePath: string): FileValidationResult {
+  if (!filePath.trim()) {
+    return { isValid: false, error: "File path cannot be empty" };
+  }
+
+  const extension = extractExtension(filePath);
+  if (!extension) {
+    return { isValid: false, error: "No file extension found" };
+  }
+
+  const mediaType = getMediaTypeFromExtension(extension);
+  if (!mediaType) {
+    const supportedExts = Object.values(ASSET_TYPE_EXTENSIONS)
+      .flat()
+      .join(", ");
+    return {
+      isValid: false,
+      error: `Unsupported file type. Supported extensions: ${supportedExts}`,
+    };
+  }
+
+  return { isValid: true, mediaType };
+}
+
+/**
+ * Check if a string is a valid URL
+ */
+export function isValidUrl(string: string): boolean {
+  try {
+    const url = new URL(string);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if a string is a valid file path (basic validation)
+ */
+export function isValidFilePath(string: string): boolean {
+  if (!string.trim()) return false;
+
+  // Check for invalid characters that are not allowed in file paths
+  const invalidChars = /[<>"|?*]/;
+  if (invalidChars.test(string)) return false;
+
+  // Colon is only allowed as second character for drive letters (C:)
+  const colonIndex = string.indexOf(":");
+  if (colonIndex !== -1 && colonIndex !== 1) return false;
+
+  return true;
+}
+
+/**
+ * Validate and format a file reference (path or URL)
+ */
+export function validateFileReference(
+  input: string,
+): FileValidationResult & { formattedPath?: string } {
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    return { isValid: false, error: "File reference cannot be empty" };
+  }
+
+  // Check if it's a URL
+  if (isValidUrl(trimmed)) {
+    const fileValidation = validateFileType(trimmed);
+    return {
+      ...fileValidation,
+      formattedPath: trimmed,
+    };
+  }
+
+  // Check if it's a file path
+  if (isValidFilePath(trimmed)) {
+    const fileValidation = validateFileType(trimmed);
+    return {
+      ...fileValidation,
+      formattedPath: trimmed.replace(/\\/g, "/"), // Normalize path separators
+    };
+  }
+
+  return { isValid: false, error: "Invalid file path or URL format" };
 }

@@ -1,6 +1,5 @@
 import React from "react";
 import Header from "./Header";
-import { useSkipNavigation } from "../../hooks/useFocusManagement";
 
 /**
  * Props for the three-panel layout component
@@ -28,7 +27,13 @@ const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
   rightPanel,
   className = "",
 }) => {
-  const { skipToElement } = useSkipNavigation();
+  const skipToElement = (elementId: string) => {
+    const element = document.getElementById(elementId);
+    if (element && element instanceof HTMLElement) {
+      element.focus();
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
 
   const handleSkipToMain = () => {
     skipToElement("main-content");
