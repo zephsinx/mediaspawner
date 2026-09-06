@@ -3,13 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ThreePanelLayout from "../ThreePanelLayout";
 import { renderWithAllProviders } from "./testUtils";
 
-// Mock the skip navigation hook
-vi.mock("../../hooks/useFocusManagement", () => ({
-  useSkipNavigation: () => ({
-    skipToElement: vi.fn(),
-  }),
-}));
-
 // Mock SpawnProfileService
 vi.mock("../../services/spawnProfileService", () => ({
   SpawnProfileService: {

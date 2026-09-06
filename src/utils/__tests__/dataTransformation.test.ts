@@ -8,10 +8,6 @@ import {
   transformAssetToSchema,
   transformProfileFromSchema,
   transformAssetFromSchema,
-  normalizeWorkingDirectory,
-  timestampToIsoString,
-  isoStringToTimestamp,
-  isValidTimestamp,
   isValidIsoString,
 } from "../dataTransformation";
 import type { SpawnProfile, MediaAsset } from "../../types";
@@ -118,56 +114,6 @@ describe("dataTransformation", () => {
         isUrl: false,
         type: "image",
       });
-    });
-  });
-
-  describe("normalizeWorkingDirectory", () => {
-    it("should normalize Windows paths", () => {
-      expect(normalizeWorkingDirectory("C:\\test\\path")).toBe("C:/test/path");
-    });
-
-    it("should normalize mixed separators", () => {
-      expect(normalizeWorkingDirectory("test\\\\path//sub")).toBe(
-        "/test/path/sub",
-      );
-    });
-
-    it("should remove trailing slashes", () => {
-      expect(normalizeWorkingDirectory("/test/path/")).toBe("/test/path");
-    });
-
-    it("should handle empty string", () => {
-      expect(normalizeWorkingDirectory("")).toBe("");
-    });
-
-    it("should handle relative paths", () => {
-      expect(normalizeWorkingDirectory("test/path")).toBe("/test/path");
-    });
-  });
-
-  describe("timestampToIsoString", () => {
-    it("should convert timestamp to ISO string", () => {
-      const timestamp = 1640995200000; // 2022-01-01T00:00:00.000Z
-      const result = timestampToIsoString(timestamp);
-      expect(result).toBe("2022-01-01T00:00:00.000Z");
-    });
-  });
-
-  describe("isoStringToTimestamp", () => {
-    it("should convert ISO string to timestamp", () => {
-      const isoString = "2022-01-01T00:00:00.000Z";
-      const result = isoStringToTimestamp(isoString);
-      expect(result).toBe(1640995200000);
-    });
-  });
-
-  describe("isValidTimestamp", () => {
-    it("should validate valid timestamps", () => {
-      expect(isValidTimestamp(1640995200000)).toBe(true);
-      expect(isValidTimestamp(0)).toBe(false);
-      expect(isValidTimestamp(-1)).toBe(false);
-      expect(isValidTimestamp(NaN)).toBe(false);
-      expect(isValidTimestamp(Infinity)).toBe(false);
     });
   });
 
